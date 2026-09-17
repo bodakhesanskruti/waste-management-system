@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environments
+venv/
+venv312/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Uploaded files
+uploads/*
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# IDE
+.vscode/
+
+# OS
+Thumbs.db
+.DS_Store
