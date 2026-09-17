@@ -320,7 +320,6 @@ def get_user_complaints(
 # --------------------------------------------------
 # Admin - All Complaints
 # --------------------------------------------------
-
 @app.get("/admin/complaints")
 def get_admin_complaints(
     db: Session = Depends(get_db)
@@ -334,18 +333,46 @@ def get_admin_complaints(
         .all()
     )
 
-    return [
-        {
+    result = []
+
+    for complaint in complaints:
+
+        verification = (
+            db.query(Verification)
+            .filter(
+                Verification.complaint_id
+                == complaint.complaint_id
+            )
+            .first()
+        )
+
+        result.append({
             "complaint_id": complaint.complaint_id,
             "user_id": complaint.user_id,
             "latitude": complaint.latitude,
             "longitude": complaint.longitude,
             "waste_type": complaint.waste_type,
             "status": complaint.status,
-            "created_at": complaint.created_at
-        }
-        for complaint in complaints
-    ]
+            "created_at": complaint.created_at,
+
+            # Verification information
+            "verification_status": (
+                verification.status
+                if verification
+                else "Not Submitted"
+            ),
+            "verification_remarks": (
+                verification.remarks
+                if verification
+                else ""
+            )
+        })
+
+    return result
+
+
+    
+    
 
 
 # --------------------------------------------------
