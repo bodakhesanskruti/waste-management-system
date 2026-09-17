@@ -1,61 +1,98 @@
 import { useEffect, useState } from "react";
 
+const API = "https://waste-management-system-1-samo.onrender.com";
+
 function AdminDashboard() {
   const [complaints, setComplaints] = useState([]);
   const [workers, setWorkers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
-  const fetchData = async () => {
+  // --------------------------------------------------
+  // Fetch complaints
+  // --------------------------------------------------
+
+  const fetchComplaints = async () => {
     try {
-      const complaintsResponse = await fetch(
-        "https://waste-management-system-1-samo.onrender.com/admin/complaints"
+      setLoading(true);
+
+      const response = await fetch(
+        `${API}/admin/complaints`
       );
 
-      const complaintsData = await complaintsResponse.json();
+      const data = await response.json();
 
-      const workersResponse = await fetch(
-        "https://waste-management-system-1-samo.onrender.com/workers"
-      );
-
-      const workersData = await workersResponse.json();
-
-      if (!complaintsResponse.ok) {
-        throw new Error("Failed to load complaints");
+      if (!response.ok) {
+        throw new Error(
+          data.detail || "Failed to load complaints"
+        );
       }
 
-      if (!workersResponse.ok) {
-        throw new Error("Failed to load workers");
-      }
-
-      setComplaints(complaintsData);
-      setWorkers(workersData);
+      setComplaints(data);
 
     } catch (error) {
-      alert(error.message);
+      console.error(error);
+      alert("Failed to load complaints");
     } finally {
       setLoading(false);
     }
   };
 
+
+  // --------------------------------------------------
+  // Fetch workers
+  // --------------------------------------------------
+
+  const fetchWorkers = async () => {
+    try {
+
+      const response = await fetch(
+        `${API}/workers`
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.detail || "Failed to load workers"
+        );
+      }
+
+      setWorkers(data);
+
+    } catch (error) {
+      console.error(error);
+      alert("Failed to load workers");
+    }
+  };
+
+
+  // --------------------------------------------------
+  // Load data when dashboard opens
+  // --------------------------------------------------
+
   useEffect(() => {
-    fetchData();
+    fetchComplaints();
+    fetchWorkers();
   }, []);
 
-  // ==============================
-  // ASSIGN WORKER
-  // ==============================
+
+  // --------------------------------------------------
+  // Assign worker
+  // --------------------------------------------------
 
   const assignWorker = async (
     complaintId,
     workerId
   ) => {
+
     if (!workerId) {
       return;
     }
 
     try {
+
       const response = await fetch(
-        `https://waste-management-system-1-samo.onrender.com/admin/assign?complaint_id=${complaintId}&worker_id=${workerId}`,
+        `${API}/admin/assign?complaint_id=${complaintId}&worker_id=${workerId}`,
         {
           method: "POST",
         }
@@ -65,34 +102,35 @@ function AdminDashboard() {
 
       if (!response.ok) {
         throw new Error(
-          data.detail || "Assignment failed"
+          data.detail || "Failed to assign worker"
         );
       }
 
       alert("Worker assigned successfully!");
 
-      fetchData();
+      fetchComplaints();
+      fetchWorkers();
 
     } catch (error) {
+      console.error(error);
       alert(error.message);
     }
   };
 
-  // ==============================
-  // VERIFY DISPOSAL
-  // ==============================
+
+  // --------------------------------------------------
+  // Verify / Reject disposal
+  // --------------------------------------------------
 
   const verifyDisposal = async (
     complaintId,
     status
   ) => {
+
     try {
+
       const response = await fetch(
-        `https://waste-management-system-1-samo.onrender.com/admin/verify/${complaintId}?status=${status}&remarks=${encodeURIComponent(
-          status === "Verified"
-            ? "Disposal verified by admin"
-            : "Disposal rejected by admin"
-        )}`,
+        `${API}/admin/verify/${complaintId}?status=${status}`,
         {
           method: "PATCH",
         }
@@ -107,95 +145,111 @@ function AdminDashboard() {
       }
 
       alert(
-        `Disposal ${status.toLowerCase()} successfully!`
+        status === "Verified"
+          ? "Disposal verified successfully!"
+          : "Disposal rejected."
       );
 
+      fetchComplaints();
+
     } catch (error) {
+      console.error(error);
       alert(error.message);
     }
   };
 
+
+  // --------------------------------------------------
+  // Statistics
+  // --------------------------------------------------
+
+  const total = complaints.length;
+
+  const pending = complaints.filter(
+    (c) => c.status === "Pending"
+  ).length;
+
+  const assigned = complaints.filter(
+    (c) => c.status === "Assigned"
+  ).length;
+
+  const completed = complaints.filter(
+    (c) => c.status === "Completed"
+  ).length;
+
+
   return (
     <div style={styles.page}>
 
-      <header style={styles.header}>
-        <h1>Waste Management System</h1>
-        <p>Admin Dashboard</p>
-      </header>
+      {/* Header */}
 
-      <div style={styles.container}>
+      <div style={styles.header}>
 
-        <div style={styles.stats}>
+        <div>
+          <h1 style={styles.title}>
+            Waste Management System
+          </h1>
 
-  <div style={styles.statCard}>
-    <h3 style={styles.statTitle}>Total Complaints</h3>
-<p style={styles.statNumber}>{complaints.length}</p>
-  </div>
-
-  <div style={styles.statCard}>
-    <h3>Pending</h3>
-    <p>
-      {
-        complaints.filter(
-          (c) => c.status === "Pending"
-        ).length
-      }
-    </p>
-  </div>
-
-  <div style={styles.statCard}>
-    <h3>Assigned</h3>
-    <p>
-      {
-        complaints.filter(
-          (c) => c.status === "Assigned"
-        ).length
-      }
-    </p>
-  </div>
-
-  <div style={styles.statCard}>
-    <h3>Completed</h3>
-    <p>
-      {
-        complaints.filter(
-          (c) => c.status === "Completed"
-        ).length
-      }
-    </p>
-  </div>
-
-</div>
-  <div style={styles.topBar}>
-
-          <div>
-            <h2>Complaint Management</h2>
-            <p>
-              Monitor complaints, assign workers and verify disposal
-            </p>
-          </div>
-
-          <button
-            onClick={fetchData}
-            style={styles.refreshButton}
-          >
-            Refresh
-          </button>
-
+          <p style={styles.subtitle}>
+            Admin Dashboard
+          </p>
         </div>
+
+        <button
+          onClick={() => {
+            fetchComplaints();
+            fetchWorkers();
+          }}
+          style={styles.refreshButton}
+        >
+          Refresh
+        </button>
+
+      </div>
+
+
+      {/* Statistics */}
+
+      <div style={styles.statsContainer}>
+
+        <div style={styles.statCard}>
+          <h2>Total Complaints</h2>
+          <p>{total}</p>
+        </div>
+
+        <div style={styles.statCard}>
+          <h2>Pending</h2>
+          <p>{pending}</p>
+        </div>
+
+        <div style={styles.statCard}>
+          <h2>Assigned</h2>
+          <p>{assigned}</p>
+        </div>
+
+        <div style={styles.statCard}>
+          <h2>Completed</h2>
+          <p>{completed}</p>
+        </div>
+
+      </div>
+
+
+      {/* Complaints */}
+
+      <div style={styles.card}>
+
+        <h2 style={styles.sectionTitle}>
+          Complaints
+        </h2>
 
         {loading ? (
 
-          <p>Loading...</p>
+          <p>Loading complaints...</p>
 
         ) : complaints.length === 0 ? (
 
-          <div style={styles.empty}>
-            <h3>No complaints found</h3>
-            <p>
-              New complaints will appear here.
-            </p>
-          </div>
+          <p>No complaints found.</p>
 
         ) : (
 
@@ -204,6 +258,7 @@ function AdminDashboard() {
             <table style={styles.table}>
 
               <thead>
+
                 <tr>
 
                   <th style={styles.th}>
@@ -231,113 +286,188 @@ function AdminDashboard() {
                   </th>
 
                 </tr>
+
               </thead>
+
 
               <tbody>
 
-                {complaints.map((complaint) => (
+                {complaints.map((complaint) => {
 
-                  <tr key={complaint.complaint_id}>
+                  return (
 
-                    <td style={styles.td}>
-                      #{complaint.complaint_id}
-                    </td>
+                    <tr key={complaint.complaint_id}>
 
-                    <td style={styles.td}>
-                      {complaint.waste_type}
-                    </td>
+                      {/* ID */}
 
-                    <td style={styles.td}>
-  <div>
-    <strong>Lat:</strong> {complaint.latitude}
-    <br />
-    <strong>Long:</strong> {complaint.longitude}
-  </div>
+                      <td style={styles.td}>
+                        #{complaint.complaint_id}
+                      </td>
 
-  <a
-    href={`https://www.google.com/maps?q=${complaint.latitude},${complaint.longitude}`}
-    target="_blank"
-    rel="noopener noreferrer"
-    style={styles.mapLink}
-  >
-    📍 View on Map
-  </a>
-</td>
 
-                    <td style={styles.td}>
-                      <span style={styles.status}>
-                        {complaint.status}
-                      </span>
-                    </td>
+                      {/* Waste */}
 
-                    <td style={styles.td}>
+                      <td style={styles.td}>
 
-                      <select
-                        style={styles.select}
-                        defaultValue=""
-                        onChange={(e) =>
-                          assignWorker(
-                            complaint.complaint_id,
-                            e.target.value
-                          )
-                        }
-                      >
+                        {complaint.waste_type}
 
-                        <option value="">
-                          Select Worker
-                        </option>
+                      </td>
 
-                        {workers.map((worker) => (
 
-                          <option
-                            key={worker.worker_id}
-                            value={worker.worker_id}
-                          >
-                            {worker.name} -{" "}
-                            {worker.availability}
+                      {/* Location */}
+
+                      <td style={styles.td}>
+
+                        <div>
+                          Lat:{" "}
+                          {complaint.latitude}
+                        </div>
+
+                        <div>
+                          Long:{" "}
+                          {complaint.longitude}
+                        </div>
+
+                        <a
+                          href={`https://www.google.com/maps?q=${complaint.latitude},${complaint.longitude}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={styles.mapLink}
+                        >
+                          📍 View on Map
+                        </a>
+
+                      </td>
+
+
+                      {/* Status */}
+
+                      <td style={styles.td}>
+
+                        <span
+                          style={{
+                            ...styles.status,
+                            background:
+                              complaint.status ===
+                              "Completed"
+                                ? "#d8f3dc"
+                                : complaint.status ===
+                                  "Assigned"
+                                ? "#fff3cd"
+                                : "#eeeeee",
+                          }}
+                        >
+                          {complaint.status}
+                        </span>
+
+                      </td>
+
+
+                      {/* Assign Worker */}
+
+                      <td style={styles.td}>
+
+                        <select
+                          defaultValue=""
+                          onChange={(e) =>
+                            assignWorker(
+                              complaint.complaint_id,
+                              e.target.value
+                            )
+                          }
+                          style={styles.select}
+                        >
+
+                          <option value="">
+                            Select Worker
                           </option>
 
-                        ))}
+                          {workers.map(
+                            (worker) => (
 
-                      </select>
+                              <option
+                                key={
+                                  worker.worker_id
+                                }
+                                value={
+                                  worker.worker_id
+                                }
+                              >
+                                {worker.name} -{" "}
+                                {
+                                  worker.availability
+                                }
+                              </option>
 
-                    </td>
-
-                    <td style={styles.td}>
-
-                      <div style={styles.verifyButtons}>
-
-                        <button
-                          style={styles.verifyButton}
-                          onClick={() =>
-                            verifyDisposal(
-                              complaint.complaint_id,
-                              "Verified"
                             )
-                          }
-                        >
-                          Verify
-                        </button>
+                          )}
 
-                        <button
-                          style={styles.rejectButton}
-                          onClick={() =>
-                            verifyDisposal(
-                              complaint.complaint_id,
-                              "Rejected"
-                            )
-                          }
-                        >
-                          Reject
-                        </button>
+                        </select>
 
-                      </div>
+                      </td>
 
-                    </td>
 
-                  </tr>
+                      {/* Verification */}
 
-                ))}
+                      <td style={styles.td}>
+
+                        {complaint.verification_status ===
+                        "Pending" ? (
+
+                          <div>
+
+                            <button
+                              onClick={() =>
+                                verifyDisposal(
+                                  complaint.complaint_id,
+                                  "Verified"
+                                )
+                              }
+                              style={
+                                styles.verifyButton
+                              }
+                            >
+                              Verify
+                            </button>
+
+                            <button
+                              onClick={() =>
+                                verifyDisposal(
+                                  complaint.complaint_id,
+                                  "Rejected"
+                                )
+                              }
+                              style={
+                                styles.rejectButton
+                              }
+                            >
+                              Reject
+                            </button>
+
+                          </div>
+
+                        ) : (
+
+                          <span
+                            style={
+                              styles.verificationText
+                            }
+                          >
+                            {
+                              complaint.verification_status ||
+                              "Not Submitted"
+                            }
+                          </span>
+
+                        )}
+
+                      </td>
+
+                    </tr>
+
+                  );
+
+                })}
 
               </tbody>
 
@@ -353,83 +483,80 @@ function AdminDashboard() {
   );
 }
 
+
+// --------------------------------------------------
+// Styles
+// --------------------------------------------------
+
 const styles = {
- 
-    mapLink: {
-  display: "inline-block",
-  marginTop: "8px",
-  color: "#2e7d32",
-  textDecoration: "none",
-  fontWeight: "600",
-  fontSize: "14px",
-},   
-  stats: {
-  display: "grid",
-  gridTemplateColumns: "repeat(4, 1fr)",
-  gap: "15px",
-  marginBottom: "25px",
-},
-
-statCard: {
-  background: "white",
-  padding: "18px",
-  borderRadius: "10px",
-  textAlign: "center",
-  border: "1px solid #e1e5e2",
-  boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-},
-
-statTitle: {
-  margin: 0,
-  fontSize: "14px",
-  color: "#666",
-},
-
-statNumber: {
-  margin: "8px 0 0",
-  fontSize: "28px",
-  color: "#2e7d32",
-  fontWeight: "700",
-},
-  
 
   page: {
     minHeight: "100vh",
     background: "#f4f7f5",
+    padding: "30px",
+    boxSizing: "border-box",
   },
 
   header: {
-    background: "#2e7d32",
-    color: "white",
-    padding: "25px",
-    textAlign: "center",
-  },
-
-  container: {
-    width: "1200px",
-    maxWidth: "95%",
-    margin: "30px auto",
-    background: "white",
-    padding: "30px",
+    background: "#ffffff",
+    padding: "22px 28px",
     borderRadius: "12px",
-    boxShadow:
-      "0 4px 15px rgba(0,0,0,0.08)",
-  },
-
-  topBar: {
+    marginBottom: "25px",
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: "25px",
+    boxShadow:
+      "0 2px 10px rgba(0,0,0,0.08)",
+  },
+
+  title: {
+    margin: 0,
+    color: "#2e7d32",
+  },
+
+  subtitle: {
+    margin: "5px 0 0",
+    color: "#666",
   },
 
   refreshButton: {
-    padding: "10px 18px",
+    padding: "11px 20px",
     border: "none",
-    borderRadius: "6px",
+    borderRadius: "7px",
     background: "#2e7d32",
     color: "white",
     cursor: "pointer",
+    fontSize: "15px",
+  },
+
+  statsContainer: {
+    display: "grid",
+    gridTemplateColumns:
+      "repeat(4, 1fr)",
+    gap: "20px",
+    marginBottom: "25px",
+  },
+
+  statCard: {
+    background: "white",
+    padding: "25px",
+    borderRadius: "12px",
+    textAlign: "center",
+    boxShadow:
+      "0 2px 10px rgba(0,0,0,0.08)",
+  },
+
+  card: {
+    background: "white",
+    padding: "25px",
+    borderRadius: "12px",
+    boxShadow:
+      "0 2px 10px rgba(0,0,0,0.08)",
+  },
+
+  sectionTitle: {
+    marginTop: 0,
+    color: "#333",
   },
 
   tableWrapper: {
@@ -442,24 +569,31 @@ statNumber: {
   },
 
   th: {
+    padding: "15px",
     textAlign: "left",
-    padding: "14px",
-    background: "#f1f5f2",
-    borderBottom: "2px solid #ddd",
+    background: "#f0f3f1",
+    borderBottom:
+      "1px solid #ddd",
   },
 
   td: {
-    padding: "14px",
-    borderBottom: "1px solid #eee",
+    padding: "15px",
+    borderBottom:
+      "1px solid #eee",
+    verticalAlign: "top",
+  },
+
+  mapLink: {
+    display: "inline-block",
+    marginTop: "8px",
+    color: "#2e7d32",
+    textDecoration: "none",
   },
 
   status: {
     display: "inline-block",
-    padding: "6px 10px",
-    borderRadius: "15px",
-    background: "#fff3cd",
-    color: "#856404",
-    fontSize: "13px",
+    padding: "7px 12px",
+    borderRadius: "20px",
   },
 
   select: {
@@ -469,13 +603,9 @@ statNumber: {
     minWidth: "170px",
   },
 
-  verifyButtons: {
-    display: "flex",
-    gap: "8px",
-  },
-
   verifyButton: {
     padding: "8px 12px",
+    marginRight: "7px",
     border: "none",
     borderRadius: "6px",
     background: "#2e7d32",
@@ -487,16 +617,16 @@ statNumber: {
     padding: "8px 12px",
     border: "none",
     borderRadius: "6px",
-    background: "#777",
+    background: "#555",
     color: "white",
     cursor: "pointer",
   },
 
-  empty: {
-    textAlign: "center",
-    padding: "50px 20px",
-    background: "#f8faf8",
-    borderRadius: "8px",
+  verificationText: {
+    padding: "7px 10px",
+    borderRadius: "6px",
+    background: "#eeeeee",
+    color: "#555",
   },
 };
 
