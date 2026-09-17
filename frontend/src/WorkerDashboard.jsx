@@ -12,7 +12,7 @@ function WorkerDashboard({ workerId }) {
   const fetchComplaints = async () => {
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/worker/${workerId}/complaints`
+        `https://waste-management-system-1-samo.onrender.com/worker/${workerId}/complaints`
       );
 
       const data = await response.json();
@@ -47,7 +47,7 @@ function WorkerDashboard({ workerId }) {
   ) => {
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/worker/complaint/${complaintId}/status?status=${status}`,
+        `https://waste-management-system-1-samo.onrender.com/worker/complaint/${complaintId}/status?status=${status}`,
         {
           method: "PATCH",
         }
@@ -86,7 +86,7 @@ function WorkerDashboard({ workerId }) {
 
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/worker/disposal?complaint_id=${complaintId}&route=${route}`,
+        `https://waste-management-system-1-samo.onrender.com/worker/disposal?complaint_id=${complaintId}&route=${route}`,
         {
           method: "POST",
         }

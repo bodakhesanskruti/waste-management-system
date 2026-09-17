@@ -12,7 +12,7 @@ function UserDashboard({ userId }) {
   const fetchComplaints = async () => {
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/user/${userId}/complaints`
+        `https://waste-management-system-1-samo.onrender.com/user/${userId}/complaints`
       );
 
       const data = await response.json();
@@ -67,7 +67,7 @@ function UserDashboard({ userId }) {
       formData.append("file", image);
 
       const response = await fetch(
-        "http://127.0.0.1:8000/classify",
+        "https://waste-management-system-1-samo.onrender.com/classify",
         {
           method: "POST",
           body: formData,
@@ -109,7 +109,7 @@ function UserDashboard({ userId }) {
 
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/complaints?user_id=${userId}&latitude=${latitude}&longitude=${longitude}&waste_type=${encodeURIComponent(
+        `https://waste-management-system-1-samo.onrender.com/complaints?user_id=${userId}&latitude=${latitude}&longitude=${longitude}&waste_type=${encodeURIComponent(
           result
         )}`,
         {

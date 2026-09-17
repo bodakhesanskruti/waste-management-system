@@ -8,13 +8,13 @@ function AdminDashboard() {
   const fetchData = async () => {
     try {
       const complaintsResponse = await fetch(
-        "http://127.0.0.1:8000/admin/complaints"
+        "https://waste-management-system-1-samo.onrender.com/admin/complaints"
       );
 
       const complaintsData = await complaintsResponse.json();
 
       const workersResponse = await fetch(
-        "http://127.0.0.1:8000/workers"
+        "https://waste-management-system-1-samo.onrender.com/workers"
       );
 
       const workersData = await workersResponse.json();
@@ -55,7 +55,7 @@ function AdminDashboard() {
 
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/admin/assign?complaint_id=${complaintId}&worker_id=${workerId}`,
+        `https://waste-management-system-1-samo.onrender.com/admin/assign?complaint_id=${complaintId}&worker_id=${workerId}`,
         {
           method: "POST",
         }
@@ -88,7 +88,7 @@ function AdminDashboard() {
   ) => {
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/admin/verify/${complaintId}?status=${status}&remarks=${encodeURIComponent(
+        `https://waste-management-system-1-samo.onrender.com/admin/verify/${complaintId}?status=${status}&remarks=${encodeURIComponent(
           status === "Verified"
             ? "Disposal verified by admin"
             : "Disposal rejected by admin"
