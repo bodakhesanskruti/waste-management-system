@@ -5,34 +5,40 @@ function Login({ onLogin }) {
   const [password, setPassword] = useState("");
 
   const handleLogin = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    try {
-      const response = await fetch(
-        `https://waste-management-system-1-samo.onrender.com/login?email=${encodeURIComponent(
-          email
-        )}&password=${encodeURIComponent(password)}`,
-        {
-          method: "POST",
-        }
-      );
+  try {
+    const url =
+      `https://waste-management-system-1-samo.onrender.com/login` +
+      `?email=${encodeURIComponent(email)}` +
+      `&password=${encodeURIComponent(password)}`;
 
-      const data = await response.json();
+    console.log("Login URL:", url);
 
-      if (!response.ok) {
-        alert(data.detail || "Login failed");
-        return;
-      }
+    const response = await fetch(url, {
+      method: "POST",
+    });
 
-      alert("Login successful!");
+    console.log("Response status:", response.status);
 
-      onLogin(data);
+    const data = await response.json();
 
-    } catch (error) {
-      alert("Cannot connect to backend");
+    console.log("Login response:", data);
+
+    if (!response.ok) {
+      alert(data.detail || "Login failed");
+      return;
     }
-  };
 
+    alert("Login successful!");
+
+    onLogin(data);
+
+  } catch (error) {
+    console.error("LOGIN ERROR:", error);
+    alert("Cannot connect to backend");
+  }
+};
   return (
     <div style={styles.page}>
       <div style={styles.card}>
